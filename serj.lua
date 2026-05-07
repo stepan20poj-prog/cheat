@@ -2622,13 +2622,48 @@ serj.chamMats = {
 }
 
 
+local authenticated = false
+local authURL = "https://pastebin.com/raw/jZ4h50YK"
+
+function serj.CheckAuth(callback)
+    if authenticated then 
+        callback(true)
+        return 
+    end
+
+    http.Fetch(authURL, function(body)
+        local mySID = LocalPlayer():SteamID()
+        local found = false
+        
+        for line in string.gmatch(body, "([^\r\n]+)") do
+            if line:find(mySID) then
+                found = true
+                break
+            end
+        end
+
+        if found then
+            authenticated = true
+            callback(true)
+        else
+            Derma_Message("ПОШОЛ НАХУЙ", "Ошибка авторизации", "ОК")
+            callback(false)
+        end
+    end, function(err)
+        Derma_Message("ОШИБКА ПОДКЛЮЧЕНИЯ: " .. err, "Auth Error", "ОК")
+        callback(false)
+    end)
+end
+
 function OpenGUI()
-    serj.Panels.framew, serj.Panels.frameh = 800, 725
-    serj.Panels.framex, serj.Panels.framey = (scrw / 2) - (serj.Panels.framew / 2), (scrh / 2) - (serj.Panels.frameh / 2)
+    serj.CheckAuth(function(success)
+        if not success then return end
 
-    files, dir = serj.oldFileFind( "serj/*.json", "DATA" )
-    scriptfiles, sdir = serj.oldFileFind( "serj/*.lua", "DATA" )
+        serj.Panels.framew, serj.Panels.frameh = 800, 725
+        serj.Panels.framex, serj.Panels.framey = (scrw / 2) - (serj.Panels.framew / 2), (scrh / 2) - (serj.Panels.frameh / 2)
 
+        files, dir = serj.oldFileFind( "serj/*.json", "DATA" )
+        scriptfiles, sdir = serj.oldFileFind( "serj/*.lua", "DATA" )
 	serj.Panels.frame = vgui.Create("DFrame")
 	serj.Panels.frame:SetPos(serj.Panels.framex,serj.Panels.framey)
 	serj.Panels.frame:SetSize(serj.Panels.framew,serj.Panels.frameh)
@@ -3602,7 +3637,6 @@ function OpenGUI()
         panel4:SizeTo(serj.Panels.frame:GetWide()-115,serj.Panels.frame:GetTall()-23,0,0,0,function()end)
         panel5:SizeTo(serj.Panels.frame:GetWide()-115,serj.Panels.frame:GetTall()-23,0,0,0,function()end)
         panel6:SizeTo(serj.Panels.frame:GetWide()-115,serj.Panels.frame:GetTall()-23,0,0,0,function()end)
-        panel7:SizeTo(serj.Panels.frame:GetWide()-115,serj.Panels.frame:GetTall()-23,0,0,0,function()end)
 
         if serj.Panels.frame:GetWide() >= scrw then
             yaycadedamoroza = serj.Panels.frame:GetWide()/700 + 5
@@ -3611,10 +3645,11 @@ function OpenGUI()
             penisdedamoroza = serj.Panels.frame:GetTall()/600 + 5
         end 
     end
+    end)
 end
 
 /*
-	PENISMAMBETA - MAMBET.BIZ
+    PENISMAMBETA - MAMBET.BIZ
 */
 
 function serj.qmenu()
